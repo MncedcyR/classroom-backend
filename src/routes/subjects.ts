@@ -9,10 +9,24 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
-        const { search, department, page = 1, limit = 10 } = req.query;
 
-        const currentPage = Math.max(1, +page);
-        const limitPerPage = Math.max(1, +limit);
+        const { search, department } = req.query;
+
+        const pageDefault = 1;
+        const limitDefault = 10;
+        const MAX_LIMIT = 100;
+
+        const rawPage = Array.isArray(req.query.page) ? req.query.page[0] : req.query.page;
+        const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
+
+        const parsedPage = Number.parseInt(String(rawPage ?? pageDefault), 10);
+        const parsedLimit = Number.parseInt(String(rawLimit ?? limitDefault), 10);
+
+        const currentPage = Math.max(1, Number.isNaN(parsedPage) ? pageDefault : parsedPage);
+        const limitPerPage = Math.min(
+            MAX_LIMIT,
+            Math.max(1, Number.isNaN(parsedLimit) ? limitDefault : parsedLimit)
+        );
         const offset = (currentPage - 1) * limitPerPage;
 
         const filterConditions = [];
