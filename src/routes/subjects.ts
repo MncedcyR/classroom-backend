@@ -1,32 +1,16 @@
-import express from 'express';
-import { Router } from 'express';
+import express from "express";
 import { eq, ilike, or, and, desc, sql, getTableColumns } from "drizzle-orm";
-import {subjects,departments} from "../db/schema";
-import {db} from "../db";
-
+import { subjects, departments } from "../db/schema";
+import { db } from "../db";
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
+        const { search, department, page = "1", limit = "10" } = req.query;
 
-        const { search, department } = req.query;
-
-        const pageDefault = 1;
-        const limitDefault = 10;
-        const MAX_LIMIT = 100;
-
-        const rawPage = Array.isArray(req.query.page) ? req.query.page[0] : req.query.page;
-        const rawLimit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
-
-        const parsedPage = Number.parseInt(String(rawPage ?? pageDefault), 10);
-        const parsedLimit = Number.parseInt(String(rawLimit ?? limitDefault), 10);
-
-        const currentPage = Math.max(1, Number.isNaN(parsedPage) ? pageDefault : parsedPage);
-        const limitPerPage = Math.min(
-            MAX_LIMIT,
-            Math.max(1, Number.isNaN(parsedLimit) ? limitDefault : parsedLimit)
-        );
+        const currentPage = Math.max(1, parseInt(page as string) || 1);
+        const limitPerPage = Math.max(1, parseInt(limit as string) || 10);
         const offset = (currentPage - 1) * limitPerPage;
 
         const filterConditions = [];
@@ -47,26 +31,30 @@ router.get("/", async (req, res) => {
         const whereClause =
             filterConditions.length > 0 ? and(...filterConditions) : undefined;
 
-        // Count query MUST include the join
+        // COUNT query
         const countResult = await db
             .select({ count: sql<number>`count(*)` })
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
-            .where(whereClause);
+            .where(whereClause); // TS-safe: drizzle allows undefined here
 
         const totalCount = countResult[0]?.count ?? 0;
 
-        // Data query
+        // DATA query
         const subjectsList = await db
             .select({
-                ...getTableColumns(subjects),
+                id: subjects.id,
+                name: subjects.name,
+                code: subjects.code,
+                createdAt: subjects.createdAt,
                 department: {
-                    ...getTableColumns(departments),
+                    id: departments.id,
+                    name: departments.name,
                 },
             })
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
-            .where(whereClause)
+            .where(whereClause) // Safe: undefined is allowed
             .orderBy(desc(subjects.createdAt))
             .limit(limitPerPage)
             .offset(offset);
