@@ -7,21 +7,18 @@ const port = 8000;
 
 app.use(express.json());
 
-const frontendUrl = process.env.FRONTEND_URL;
-if (!frontendUrl) {
-       throw new Error("FRONTEND_URL is not defined");
-    }
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL, // React app URL
+        methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
+        credentials: true, // allow cookies
+    })
+);
 
 
-app.use(cors({
-    origin: frontendUrl,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
 
 
-}))
-
-app.use('/api/subjects',subjectsRouter)
+app.use("/api/subjects",subjectsRouter)
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
