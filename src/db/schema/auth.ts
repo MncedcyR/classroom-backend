@@ -2,8 +2,8 @@ import { pgTable, text, timestamp, boolean, pgEnum, index } from "drizzle-orm/pg
 import { relations } from "drizzle-orm";
 
 const timestamps = {
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
+    created_at: timestamp('created_at').defaultNow().notNull(),
+    updated_at: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
 }
 
 export const roleEnum = pgEnum("role", ["student", "teacher", "admin"]);

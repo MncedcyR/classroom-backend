@@ -19,6 +19,21 @@ function resolveHost(host: string): Promise<string> {
 async function main() {
     console.log("Starting database reset...");
 
+    // Safety guard: refuse to run in production
+    if (process.env.NODE_ENV === "production") {
+        console.error("ERROR: Database reset is NOT allowed in production environment!");
+        console.error("NODE_ENV is set to 'production'. Exiting for safety.");
+        process.exit(1);
+    }
+
+    // Safety guard: require explicit flag
+    if (process.env.ALLOW_DB_RESET !== "true") {
+        console.error("ERROR: Database reset requires explicit permission!");
+        console.error("Set ALLOW_DB_RESET=true in your environment to proceed.");
+        console.error("This is a destructive operation that will DROP all tables.");
+        process.exit(1);
+    }
+
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
         throw new Error("DATABASE_URL is not set");
@@ -31,6 +46,13 @@ async function main() {
         const ip = await resolveHost(url.hostname);
         console.log(`Resolved IP: ${ip}`);
 
+        // Parse SSL configuration: default to true (secure), only disable if explicitly set to "0" or "false"
+        const dbSslRejectUnauthorized =
+            process.env.DB_SSL_REJECT_UNAUTHORIZED === "0" ||
+                process.env.DB_SSL_REJECT_UNAUTHORIZED === "false"
+                ? false
+                : true;
+
         const poolConfig = {
             user: url.username,
             password: url.password,
@@ -39,7 +61,7 @@ async function main() {
             database: url.pathname.slice(1),
             ssl: {
                 servername: url.hostname,
-                rejectUnauthorized: false
+                rejectUnauthorized: dbSslRejectUnauthorized
             }
         };
 

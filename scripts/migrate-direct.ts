@@ -33,16 +33,31 @@ async function main() {
         const ip = await resolveHost(url.hostname);
         console.log(`Resolved IP: ${ip}`);
 
+        // Parse SSL configuration: default to true (secure), only disable if explicitly set to "0" or "false"
+        const dbSslRejectUnauthorized =
+            process.env.DB_SSL_REJECT_UNAUTHORIZED === "0" ||
+                process.env.DB_SSL_REJECT_UNAUTHORIZED === "false"
+                ? false
+                : true;
+
+        // Build SSL configuration - support custom CA in production
+        const sslConfig: any = {
+            servername: url.hostname,
+            rejectUnauthorized: dbSslRejectUnauthorized
+        };
+
+        // If CA certificate is provided (for production), add it to SSL config
+        if (process.env.DATABASE_CA_CERT) {
+            sslConfig.ca = process.env.DATABASE_CA_CERT;
+        }
+
         const poolConfig = {
             user: url.username,
             password: url.password,
             host: ip,
             port: Number(url.port) || 5432,
             database: url.pathname.slice(1),
-            ssl: {
-                servername: url.hostname,
-                rejectUnauthorized: false
-            }
+            ssl: sslConfig
         };
 
         console.log("Connecting to database via pool...");
