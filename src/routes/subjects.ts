@@ -46,7 +46,7 @@ router.get("/", async (req, res) => {
                 id: subjects.id,
                 name: subjects.name,
                 code: subjects.code,
-                created_at: subjects.created_at,
+                createdAt: subjects.createdAt,
                 department: {
                     id: departments.id,
                     name: departments.name,
@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
             .where(whereClause) // Safe: undefined is allowed
-            .orderBy(desc(subjects.created_at))
+            .orderBy(desc(subjects.createdAt))
             .limit(limitPerPage)
             .offset(offset);
 

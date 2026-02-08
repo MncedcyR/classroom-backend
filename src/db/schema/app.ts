@@ -3,8 +3,8 @@ import { relations } from "drizzle-orm";
 import { user } from "./auth";
 
 const timestamps = {
-    created_at: timestamp('created_at').defaultNow().notNull(),
-    updated_at: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()).notNull(),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt').defaultNow().$onUpdate(() => new Date()).notNull(),
 }
 
 export const classStatusEnum = pgEnum("class_status", ["active", "inactive", "archived"]);
