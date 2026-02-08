@@ -16,7 +16,12 @@ export const securityMiddleware = async (
 ): Promise<void> => {
     try {
         // Get user role from request (default to guest if not authenticated)
-        const userRole = (req.user?.role || "guest") as RateLimitRole;
+        let userRole = (req.user?.role || "guest") as RateLimitRole;
+
+        // Validate role exists in roleLimits, fallback to guest if not
+        if (!roleLimits[userRole]) {
+            userRole = "guest";
+        }
 
         const userId = req.user?.id || req.ip || "anonymous";
 
@@ -28,7 +33,7 @@ export const securityMiddleware = async (
         const ajWithRateLimit = aj.withRule(
             tokenBucket({
                 mode: "LIVE",
-                characteristics: [`userId:${userId}`],
+                characteristics: ["userId"],
                 refillRate: limit.max,
                 interval: limit.interval,
                 capacity: limit.max,

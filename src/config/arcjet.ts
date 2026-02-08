@@ -1,9 +1,15 @@
 import arcjet, { tokenBucket, shield } from "@arcjet/node";
 import type { RateLimitRole } from "../type.js";
 
+// Validate ARCJET_KEY before initialization
+const ARCJET_KEY = process.env.ARCJET_KEY;
+if (!ARCJET_KEY) {
+    console.error("FATAL: ARCJET_KEY environment variable is not set");
+    process.exit(1);
+}
 
 const aj = arcjet({
-    key: process.env.ARCJET_KEY!,
+    key: ARCJET_KEY,
     characteristics: ["userId"], // Track requests per user
     rules: [
         // Shield protects against common attacks
