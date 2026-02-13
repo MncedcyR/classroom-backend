@@ -2,10 +2,12 @@ import AgentAPI from 'apminsight';
 AgentAPI.config()
 import express from 'express';
 import subjectsRouter from "./routes/subjects.js";
+import usersRouter from "./routes/users.js";
 import cors from "cors";
 import securityMiddleware from "./middleware/security.js";
 import { auth } from './lib/auth.js';
 import { toNodeHandler } from 'better-auth/node';
+import classesRouter from "./routes/classes.js";
 
 const app = express();
 const port = 8000;
@@ -30,6 +32,8 @@ app.all('/api/auth/*splat', toNodeHandler(auth));
 
 
 app.use("/api/subjects", subjectsRouter)
+app.use("/api/users", usersRouter)
+app.use("/api/classes", classesRouter)
 
 app.get('/', (req, res) => {
     res.send('Backend server running here...');
