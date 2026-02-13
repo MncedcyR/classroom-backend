@@ -1,7 +1,7 @@
 import express from "express";
 import { eq, ilike, or, and, desc, sql, getTableColumns } from "drizzle-orm";
-import { subjects, departments } from "../db/schema";
-import { db } from "../db";
+import { subjects, departments } from "../db/schema/index.js";
+import { db } from "../db/index.js";
 
 const router = express.Router();
 
@@ -66,7 +66,6 @@ router.get("/", async (req, res) => {
         });
     } catch (error) {
         console.error("GET /subjects error:", error);
-        console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         res.status(500).json({ error: "Failed to fetch subjects" });
     }
 });
