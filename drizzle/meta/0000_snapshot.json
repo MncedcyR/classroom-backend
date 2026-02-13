@@ -1,5 +1,5 @@
 {
-  "id": "a4d73944-772f-460c-ac6b-989f934dcf33",
+  "id": "8e6ab9e8-7b80-44ad-8b4c-be18fbcfa740",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -61,18 +61,18 @@
           "primaryKey": false,
           "notNull": false
         },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "capacity": {
           "name": "capacity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 50
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "status": {
           "name": "status",
@@ -86,11 +86,10 @@
           "name": "schedules",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'[]'::jsonb"
+          "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -217,8 +216,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -281,8 +280,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -326,6 +325,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "enrollments_student_class_unique": {
+          "name": "enrollments_student_class_unique",
+          "columns": [
+            {
+              "expression": "student_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "class_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -357,16 +377,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "enrollments_student_class_unique": {
-          "name": "enrollments_student_class_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "student_id",
-            "class_id"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -416,8 +427,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -471,50 +482,44 @@
           "primaryKey": true,
           "notNull": true
         },
-        "accountId": {
-          "name": "accountId",
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "providerId": {
-          "name": "providerId",
+        "account_id": {
+          "name": "account_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "userId": {
-          "name": "userId",
+        "provider_id": {
+          "name": "provider_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "accessToken": {
-          "name": "accessToken",
+        "access_token": {
+          "name": "access_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "refreshToken": {
-          "name": "refreshToken",
+        "refresh_token": {
+          "name": "refresh_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "idToken": {
-          "name": "idToken",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "accessTokenExpiresAt": {
-          "name": "accessTokenExpiresAt",
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
-        "refreshTokenExpiresAt": {
-          "name": "refreshTokenExpiresAt",
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -525,14 +530,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "password": {
           "name": "password",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -547,11 +558,11 @@
         }
       },
       "indexes": {
-        "account_userId_idx": {
-          "name": "account_userId_idx",
+        "account_user_id_idx": {
+          "name": "account_user_id_idx",
           "columns": [
             {
-              "expression": "userId",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -561,20 +572,41 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "account_provider_account_unique": {
+          "name": "account_provider_account_unique",
+          "columns": [
+            {
+              "expression": "provider_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
-        "account_userId_user_id_fk": {
-          "name": "account_userId_user_id_fk",
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
           "columnsFrom": [
-            "userId"
+            "user_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -594,9 +626,9 @@
           "primaryKey": true,
           "notNull": true
         },
-        "expiresAt": {
-          "name": "expiresAt",
-          "type": "timestamp",
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -606,26 +638,26 @@
           "primaryKey": false,
           "notNull": true
         },
-        "ipAddress": {
-          "name": "ipAddress",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "userAgent": {
-          "name": "userAgent",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "userId": {
-          "name": "userId",
-          "type": "text",
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -640,11 +672,11 @@
         }
       },
       "indexes": {
-        "session_userId_idx": {
-          "name": "session_userId_idx",
+        "session_user_id_idx": {
+          "name": "session_user_id_idx",
           "columns": [
             {
-              "expression": "userId",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -654,33 +686,40 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "columns": [
+            {
+              "expression": "token",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
-        "session_userId_user_id_fk": {
-          "name": "session_userId_user_id_fk",
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
           "columnsFrom": [
-            "userId"
+            "user_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "session_token_unique": {
-          "name": "session_token_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -707,8 +746,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "emailVerified": {
-          "name": "emailVerified",
+        "email_verified": {
+          "name": "email_verified",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true
@@ -727,14 +766,14 @@
           "notNull": true,
           "default": "'student'"
         },
-        "imageCldPubId": {
-          "name": "imageCldPubId",
+        "image_cld_pub_id": {
+          "name": "image_cld_pub_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
@@ -751,15 +790,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "user_email_unique": {
-          "name": "user_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -786,14 +817,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "expiresAt": {
-          "name": "expiresAt",
+        "expires_at": {
+          "name": "expires_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
-        "createdAt": {
-          "name": "createdAt",
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,

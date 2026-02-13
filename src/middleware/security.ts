@@ -1,86 +1,93 @@
-import { Request, Response, NextFunction } from "express";
-import arcjet, { tokenBucket } from "@arcjet/node";
-import aj, { roleLimits } from "../config/arcjet.js";
-import type { RateLimitRole } from "../type.js";
+import { slidingWindow } from "@arcjet/node";
+import type { ArcjetNodeRequest } from "@arcjet/node";
+import type { NextFunction, Request, Response } from "express";
+import aj from "../config/arcjet.js";
 
 
-/**
- * Security middleware that applies Arcjet protection including:
- * - Shield (DDoS, bot protection)
- * - Role-based rate limiting
- */
-export const securityMiddleware = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-): Promise<void> => {
+const securityMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    // If NODE_ENV is TEST, skip security middleware
+    if (process.env.NODE_ENV === "test") return next();
+
     try {
-        // Get user role from request (default to guest if not authenticated)
-        let userRole = (req.user?.role || "guest") as RateLimitRole;
+        const role: RateLimitRole = req.user?.role ?? "guest";
 
-        // Validate role exists in roleLimits, fallback to guest if not
-        if (!roleLimits[userRole]) {
-            userRole = "guest";
+        let limit: number;
+        let message: string;
+
+        switch (role) {
+            case "admin":
+                limit = 20;
+                message = "Admin request limit exceeded (20 per minute). Slow down!";
+                break;
+            case "teacher":
+            case "student":
+                limit = 10;
+                message = "User request limit exceeded (10 per minute). Please wait.";
+                break;
+            default:
+                limit = 5;
+                message =
+                    "Guest request limit exceeded (5 per minute). Please sign up for higher limits.";
+                break;
         }
 
-        const userId = req.user?.id || req.ip || "anonymous";
-
-        // Get rate limit config for this role
-        const limit = roleLimits[userRole];
-
-
-        // Create role-specific instance with rate limiting
-        const ajWithRateLimit = aj.withRule(
-            tokenBucket({
+        const client = aj.withRule(
+            slidingWindow({
                 mode: "LIVE",
-                characteristics: ["userId"],
-                refillRate: limit.max,
-                interval: limit.interval,
-                capacity: limit.max,
+                interval: "1m",
+                max: limit,
             })
         );
 
-        // Run Arcjet protection
-        const decision = await ajWithRateLimit.protect(req, {
-            userId,
-            requested: 1,
+        // Extract IP address from various sources
+        const ip =
+            (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+            (req.headers['x-real-ip'] as string) ||
+            req.socket.remoteAddress ||
+            req.ip ||
+            "127.0.0.1";
+
+        const arcjetRequest: ArcjetNodeRequest = {
+            headers: req.headers,
+            method: req.method,
+            url: req.originalUrl ?? req.url,
+            socket: {
+                remoteAddress: ip,
+            },
+        };
+
+        const decision = await client.protect(arcjetRequest, {
+            ip,
         });
 
-        // Log decision for debugging
-        console.log("Arcjet decision:", decision);
-
-        if (decision.isDenied()) {
-            if (decision.reason.isRateLimit()) {
-                res.status(429).json({
-                    error: "Too Many Requests",
-                    message: "Rate limit exceeded. Please try again later.",
-                    retryAfter: decision.reason.resetTime,
-                });
-                return;
-            }
-
-            if (decision.reason.isBot()) {
-                res.status(403).json({
-                    error: "Forbidden",
-                    message: "Bot traffic detected",
-                });
-                return;
-            }
-
-            // Generic denial
-            res.status(403).json({
+        if (decision.isDenied() && decision.reason.isBot()) {
+            return res.status(429).json({
                 error: "Forbidden",
-                message: "Request denied by security policy",
+                message: "Automated requests are not allowed",
             });
-            return;
         }
 
-        // Request is allowed, continue
+        if (decision.isDenied() && decision.reason.isShield()) {
+            return res.status(429).json({
+                error: "Forbidden",
+                message: "Request blocked by security policy",
+            });
+        }
+
+        if (decision.isDenied() && decision.reason.isRateLimit()) {
+            return res.status(429).json({
+                error: "Too Many Requests",
+                message,
+            });
+        }
+
         next();
     } catch (error) {
-        console.error("Security middleware error:", error);
-        // Fail open - allow request to continue if Arcjet fails
-        next();
+        console.error("Arcjet middleware error:", error);
+        res.status(500).json({
+            error: "Internal Server Error",
+            message: "Something went wrong with the security middleware.",
+        });
     }
 };
 

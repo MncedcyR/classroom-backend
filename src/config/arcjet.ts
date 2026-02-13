@@ -1,31 +1,38 @@
-import arcjet, { tokenBucket, shield } from "@arcjet/node";
-import type { RateLimitRole } from "../type.js";
+import arcjet, { shield, detectBot, slidingWindow } from "@arcjet/node";
 
-// Validate ARCJET_KEY before initialization
-const ARCJET_KEY = process.env.ARCJET_KEY;
-if (!ARCJET_KEY) {
-    console.error("FATAL: ARCJET_KEY environment variable is not set");
-    process.exit(1);
+if (!process.env.ARCJET_KEY && process.env.NODE_ENV !== "test") {
+    throw new Error(
+        "ARCJET_KEY environment variable is required. Sign up for your Arcjet key at https://app.arcjet.com"
+    );
 }
 
+// Determine if we're in development mode
+const isDevelopment = process.env.ARCJET_ENV === "development" || process.env.NODE_ENV === "development";
+
+// Configure Arcjet with security rules.
 const aj = arcjet({
-    key: ARCJET_KEY,
-    characteristics: ["userId"], // Track requests per user
+    key: process.env.ARCJET_KEY!,
+    // In development, use custom characteristics that don't require IP
+    characteristics: isDevelopment ? [] : ["ip"],
     rules: [
-        // Shield protects against common attacks
-        shield({
+        shield({ mode: "LIVE" }),
+        // Create a bot detection rule
+        detectBot({
+            mode: "LIVE", // Blocks requests. Use "DRY_RUN" to log only
+            // Block all bots except the following
+            allow: [
+                // See the full list at https://arcjet.com/bot-list
+                "CATEGORY:SEARCH_ENGINE", // Google, Bing, etc
+                "CATEGORY:PREVIEW", // Link previews e.g. Slack, Discord
+            ],
+        }),
+        // Create a token bucket rate limit. Other algorithms are supported.
+        slidingWindow({
             mode: "LIVE",
+            interval: "2s", // Refill every 2 seconds
+            max: 5, // Allow 5 requests per interval
         }),
     ],
 });
-
-// Role-based rate limits (interval in seconds)
-export const roleLimits: Record<RateLimitRole, { max: number; interval: number }> = {
-    admin: { max: 1000, interval: 3600 }, // 1 hour
-    teacher: { max: 500, interval: 3600 }, // 1 hour
-    student: { max: 200, interval: 3600 }, // 1 hour
-    guest: { max: 50, interval: 3600 }, // 1 hour
-};
-
 
 export default aj;

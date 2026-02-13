@@ -1,12 +1,16 @@
 import express from 'express';
 import subjectsRouter from "./routes/subjects";
 import cors from "cors";
+import securityMiddleware from "./middleware/security";
+import { auth } from './lib/auth';
+import { toNodeHandler } from 'better-auth/node';
 
 const app = express();
 const port = 8000;
 
 app.use(express.json());
 
+// Apply CORS first to prevent preflight failures
 app.use(
     cors({
         origin: process.env.FRONTEND_URL, // React app URL
@@ -15,15 +19,20 @@ app.use(
     })
 );
 
+// Apply security middleware after CORS
+app.use(securityMiddleware);
+
+app.all('/api/auth/*splat', toNodeHandler(auth));
 
 
 
-app.use("/api/subjects",subjectsRouter)
+
+app.use("/api/subjects", subjectsRouter)
 
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.send('Backend server running here...');
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+    console.log(`Backend app listening at http://localhost:${port}`);
 });

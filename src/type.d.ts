@@ -1,16 +1,9 @@
-export type UserRoles = "admin" | "teacher" | "student";
+type Schedule = {
+    day: string;
+    startTime: string;
+    endTime: string;
+};
 
-export type RateLimitRole = UserRoles | "guest";
+type UserRoles = "admin" | "teacher" | "student";
 
-// Extend Express Request to include user property
-declare global {
-    namespace Express {
-        interface Request {
-            user?: {
-                id: string;
-                role: UserRoles;
-                email?: string;
-            };
-        }
-    }
-}
+type RateLimitRole = UserRoles | "guest";

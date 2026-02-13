@@ -7,10 +7,10 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
-        const { search, department, page = "1", limit = "10" } = req.query;
+        const { search, department, page = 1, limit = 10 } = req.query;
 
-        const currentPage = Math.max(1, parseInt(page as string) || 1);
-        const limitPerPage = Math.max(1, parseInt(limit as string) || 10);
+        const currentPage = Math.max(1, +page);
+        const limitPerPage = Math.max(1, +limit);
         const offset = (currentPage - 1) * limitPerPage;
 
         const filterConditions = [];
@@ -31,30 +31,26 @@ router.get("/", async (req, res) => {
         const whereClause =
             filterConditions.length > 0 ? and(...filterConditions) : undefined;
 
-        // COUNT query
+        // Count query MUST include the join
         const countResult = await db
             .select({ count: sql<number>`count(*)` })
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
-            .where(whereClause); // TS-safe: drizzle allows undefined here
+            .where(whereClause);
 
         const totalCount = countResult[0]?.count ?? 0;
 
-        // DATA query
+        // Data query
         const subjectsList = await db
             .select({
-                id: subjects.id,
-                name: subjects.name,
-                code: subjects.code,
-                createdAt: subjects.createdAt,
+                ...getTableColumns(subjects),
                 department: {
-                    id: departments.id,
-                    name: departments.name,
+                    ...getTableColumns(departments),
                 },
             })
             .from(subjects)
             .leftJoin(departments, eq(subjects.departmentId, departments.id))
-            .where(whereClause) // Safe: undefined is allowed
+            .where(whereClause)
             .orderBy(desc(subjects.createdAt))
             .limit(limitPerPage)
             .offset(offset);
@@ -70,7 +66,26 @@ router.get("/", async (req, res) => {
         });
     } catch (error) {
         console.error("GET /subjects error:", error);
+        console.error("Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
         res.status(500).json({ error: "Failed to fetch subjects" });
+    }
+});
+
+router.post("/", async (req, res) => {
+    try {
+        const { departmentId, name, code, description } = req.body;
+
+        const [createdSubject] = await db
+            .insert(subjects)
+            .values({ departmentId, name, code, description })
+            .returning({ id: subjects.id });
+
+        if (!createdSubject) throw Error;
+
+        res.status(201).json({ data: createdSubject });
+    } catch (error) {
+        console.error("POST /subjects error:", error);
+        res.status(500).json({ error: "Failed to create subject" });
     }
 });
 
