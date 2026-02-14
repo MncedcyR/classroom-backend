@@ -1,0 +1,13 @@
+{
+  "stack": "Error: Failed query: select count(*) from \"classes\" left join \"subjects\" on \"classes\".\"subject_id\" = \"subjects\".\"id\" left join \"user\" on \"classes\".\"teacher_id\" = \"user\".\"id\" where (\"classes\".\"name\" ilike $1 or \"classes\".\"invite_code\" ilike $2)\nparams: %math%,%math%\n    at NeonPreparedQuery.queryWithCache (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\node_modules\\src\\pg-core\\session.ts:73:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async NeonPreparedQuery.execute (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\node_modules\\src\\neon-serverless\\session.ts:152:18)\n    at async <anonymous> (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\src\\routes\\classes.ts:40:29)",
+  "message": "Failed query: select count(*) from \"classes\" left join \"subjects\" on \"classes\".\"subject_id\" = \"subjects\".\"id\" left join \"user\" on \"classes\".\"teacher_id\" = \"user\".\"id\" where (\"classes\".\"name\" ilike $1 or \"classes\".\"invite_code\" ilike $2)\nparams: %math%,%math%",
+  "query": "select count(*) from \"classes\" left join \"subjects\" on \"classes\".\"subject_id\" = \"subjects\".\"id\" left join \"user\" on \"classes\".\"teacher_id\" = \"user\".\"id\" where (\"classes\".\"name\" ilike $1 or \"classes\".\"invite_code\" ilike $2)",
+  "params": [
+    "%math%",
+    "%math%"
+  ],
+  "cause": {
+    "stack": "Error\n    at file:///C:/Users/Administrator/Desktop/classroomx/classroom-backend/node_modules/@neondatabase/serverless/index.mjs:1087:33\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\node_modules\\src\\neon-serverless\\session.ts:153:11)\n    at async NeonPreparedQuery.queryWithCache (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\node_modules\\src\\pg-core\\session.ts:71:12)\n    at async NeonPreparedQuery.execute (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\node_modules\\src\\neon-serverless\\session.ts:152:18)\n    at async <anonymous> (C:\\Users\\Administrator\\Desktop\\classroomx\\classroom-backend\\src\\routes\\classes.ts:40:29)",
+    "message": ""
+  }
+}
