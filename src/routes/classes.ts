@@ -3,6 +3,7 @@ import { and, desc, eq, getTableColumns, ilike, or, sql } from "drizzle-orm";
 
 import { db } from "../db/index.js";
 import { classes, departments, enrollments, subjects, user } from "../db/schema/index.js";
+import { error } from "node:console";
 
 const router = express.Router();
 
@@ -155,6 +156,8 @@ router.get("/:id", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch class details" });
     }
 });
+
+
 
 // List users in a class by role with pagination
 router.get("/:id/users", async (req, res) => {
